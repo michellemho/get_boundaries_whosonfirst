@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>San Francisco Neighbourhoods</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://mapzen.com/js/mapzen.css">
+    <script src="https://mapzen.com/js/mapzen.min.js"></script>
+    <style>
+      #map {
+        height: 100%;
+        width: 100%;
+        position: absolute;
+      }
+      html,body{margin: 0; padding: 0;}
+    </style>
+  </head>
+  <body onload="init()">
+    <div id="map"></div>
+    <script src="mapzen.places.api.js"></script>
+    <script src="jquery.min.js"></script>
+    <script>
+    var foo = prompt("Give me a WOF place ID!");
+    // Get an API key from https://mapzen.com/dashboard
+    L.Mapzen.apiKey = 'mapzen-CQ12NPK';
+    var map = L.Mapzen.map('map', {
+      tangramOptions: {
+        scene: {
+          import: [
+            'https://mapzen.com/carto/refill-style/8/refill-style.zip',
+            'https://mapzen.com/carto/refill-style/8/themes/color-gray.zip',
+            'https://mapzen.com/carto/refill-style/8/themes/label-1.zip'
+          ]
+        }
+      }
+    });
+
+    // How we should handle each API result
+    var show_place = function(place) {
+      $.get(place['mz:uri'], function(result) {
+        var layer = L.geoJSON(result, {style: function (feature) {
+          randomNumber1 = 86+Math.ceil(Math.random()*100);
+          color = "rgb("+randomNumber1+","+randomNumber1+","+randomNumber1+")"
+          return {color: '#888888', weight: 1, opacity: '.7', fillColor: color, fillOpacity: .5};
+        }}).addTo(map);
+        layer.bindPopup(place['wof:name']);
+      });
+    }
+
+    // Incrementally show API results on the map
+    var onpage = function(rsp) {
+      //console.log(rsp);
+      for (var i = 0; i < rsp.places.length; i++) {
+        var place = rsp.places[i];
+        show_place(place);
+      }
+    };
+
+    // Just log errors to the JS console
+    var onerror = function(rsp) {
+      console.error(rsp);
+    };
+
+    // NOOP (we are using onpage instead)
+    var oncomplete = function() { return; };
+
+    function init() {
+
+      // See: https://mapzen.com/documentation/places/methods/#mapzen.places.getDescendants
+      // San Francisco's WOF ID
+      var parent_id = foo;
+      var method = 'mapzen.places.getDescendants';
+      var data = {
+        id: parent_id,
+        per_page: 500,
+        extras: 'mz:uri',
+        placetype: 'neighbourhood'
+      };
+
+      // Ok now we actually call the API
+      mapzen.places.api.call_paginated(method, data, onpage, onerror, oncomplete);
+    }
+    var show_centroid = function(place) {
+      var latitude = place['geom:latitude']
+      var longitude = place['geom:longitude']
+      });
+    }
+    mapzen.places.api.call_paginated('mapzen.places.getInfo',{id: foo, extras: 'geom:latitude, geom:longitude'})
+    map.setView([37.77493, -122.41942], 14);
+  </script>
+  </body>
+</html>
