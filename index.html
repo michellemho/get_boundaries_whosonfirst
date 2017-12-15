@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>San Francisco Neighbourhoods</title>
+    <title>Get Neighbourhoods</title>
     <meta charset="utf-8">
     <link rel="stylesheet" href="https://mapzen.com/js/mapzen.css">
     <script src="https://mapzen.com/js/mapzen.min.js"></script>
@@ -13,9 +13,11 @@
       }
       html,body{margin: 0; padding: 0;}
     </style>
+    <a href="http://oneclick.cartodb.com/?file={{YOUR FILE URL}}&provider={{PROVIDER NAME}}&logo={{YOUR LOGO URL}}" class="u-vspace--24">Map in CARTO</a>
   </head>
   <body onload="init()">
     <div id="map"></div>
+    <button onclick="download_json()">Download Me!</button>
     <script src="mapzen.places.api.js"></script>
     <script src="jquery.min.js"></script>
     <script>
@@ -33,6 +35,12 @@
         }
       }
     });
+    map.setView([37.77493, -122.41942], 14);
+
+    var final_geojson =  {
+                        "type" : "FeatureCollection",
+                        "features": []
+                          }
 
     // How we should handle each API result
     var show_place = function(place) {
@@ -43,6 +51,10 @@
           return {color: '#888888', weight: 1, opacity: '.7', fillColor: color, fillOpacity: .5};
         }}).addTo(map);
         layer.bindPopup(place['wof:name']);
+          });
+      $.getJSON(place['mz:uri'], function(data){
+        final_geojson['features'].push(data);
+        // console.log(data);
       });
     }
 
@@ -52,6 +64,9 @@
       for (var i = 0; i < rsp.places.length; i++) {
         var place = rsp.places[i];
         show_place(place);
+        // final_geojson['features'].push(place['mz:uri']);
+        // var geoJSONcollection = concatGeoJSON(None, )
+
       }
     };
 
@@ -78,14 +93,38 @@
 
       // Ok now we actually call the API
       mapzen.places.api.call_paginated(method, data, onpage, onerror, oncomplete);
-    }
-    var show_centroid = function(place) {
-      var latitude = place['geom:latitude']
-      var longitude = place['geom:longitude']
-      });
-    }
-    mapzen.places.api.call_paginated('mapzen.places.getInfo',{id: foo, extras: 'geom:latitude, geom:longitude'})
-    map.setView([37.77493, -122.41942], 14);
+    };
+
+    // trying to concatenate two geojsons...
+
+
+    console.log(final_geojson);
+
+    function download_json(){
+      var hiddenElement = document.createElement('a');
+      hiddenElement.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(final_geojson));
+      hiddenElement.target = '_blank';
+      hiddenElement.download = 'neighborhoods.json';
+      hiddenElement.click();
+  }
+
+
+    // var geoJSONcollection = concatGeoJSON()
+
+
+
+    // var show_centroid = function(place) {
+    //   $.get(place['mz:uri'], function(result) {
+    //     var layer = L.geoJSON(result, {style: function (feature) {
+    //       randomNumber1 = 86+Math.ceil(Math.random()*100);
+    //       color = "rgb("+randomNumber1+","+randomNumber1+","+randomNumber1+")"
+    //       return {color: '#888888', weight: 1, opacity: '.7', fillColor: color, fillOpacity: .5};
+    //     }}).addTo(map);
+    //     layer.bindPopup(place['wof:name']);
+    //   });
+    // }
+    // mapzen.places.api.call_paginated('mapzen.places.getInfo',{id: foo, extras: 'geom:latitude, geom:longitude'})
+    // console.log('hello' + $.getJSON(place['mz:uri'], function(data){return data}));
   </script>
   </body>
 </html>
